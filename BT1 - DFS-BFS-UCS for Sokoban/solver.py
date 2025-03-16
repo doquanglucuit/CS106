@@ -215,6 +215,25 @@ def uniformCostSearch(gameState):
     actions.push([0], 0)
     temp = []
     ### CODING FROM HERE ###
+    while frontier.isEmpty:
+        node = frontier.pop()
+        node_action = actions.pop()
+
+        if isEndState(node[-1][1]):
+            temp += node_action[1:]
+            break
+
+        if node[-1] not in exploredSet:
+            exploredSet.add(node[-1])
+            for action in legalActions(node[-1][0], node[-1][1]):
+                newPosPlayer, newPosBox = updateState(node[-1][0], node[-1][1], action)
+
+                if isFailed(newPosBox):
+                    continue
+
+                frontier.push(node + [(newPosPlayer, newPosBox)], cost(node_action[1:] + [action[-1]]))
+                actions.push(node_action + [action[-1]], cost(node_action[1:] + [action[-1]]))
+    return temp
 
 
 """Read command"""
@@ -239,8 +258,8 @@ def get_move(layout, player_pos, method):
     global posWalls, posGoals
     # layout, method = readCommand(sys.argv[1:]).values()
     gameState = transferToGameState2(layout, player_pos)
-    posWalls = PosOfWalls(gameState)
     posGoals = PosOfGoals(gameState)
+    posWalls = PosOfWalls(gameState)
     
     if method == 'dfs':
         result = depthFirstSearch(gameState)
@@ -251,6 +270,7 @@ def get_move(layout, player_pos, method):
     else:
         raise ValueError('Invalid method.')
     time_end=time.time()
-    print('Runtime of %s: %.2f second.' %(method, time_end-time_start))
+    print('Runtime of %s: %.5f second.' %(method, time_end-time_start))
     print(result)
+    print(f'Length of the path: {len(result)}')
     return result
