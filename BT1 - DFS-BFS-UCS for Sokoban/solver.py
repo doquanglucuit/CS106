@@ -172,30 +172,30 @@ def depthFirstSearch(gameState):
 
 def breadthFirstSearch(gameState):
     """Implement breadthFirstSearch approach"""
-    beginBox = PosOfBoxes(gameState)
-    beginPlayer = PosOfPlayer(gameState)
+    beginBox = PosOfBoxes(gameState) # Trạng thái của các hộp ban đầu
+    beginPlayer = PosOfPlayer(gameState) # Vị trí ban đầu của người chơi
 
-    startState = (beginPlayer, beginBox)
-    frontier = collections.deque([[startState]])
-    exploredSet = set()
-    actions = collections.deque([[0]])
-    temp = []
+    startState = (beginPlayer, beginBox) # Trạng thái đầu tiên của trò chơi
+    frontier = collections.deque([[startState]]) # Dùng deque(hiểu như queue vì là bfs) để lưu tập các trạng thái cần mở rộng, thêm trạng thái ban đầu vào frontier
+    exploredSet = set() # Tập các nút (trạng thái) đã thăm để tránh lặp lại
+    actions = collections.deque([[0]]) # Lưu lại truy vết đối với nút(trạng thái) tương ứng, thêm trạng thái ban đầu vào actions
+    temp = [] # Chứa danh sách các hành động tạo thành lời giải
     ### CODING FROM HERE ###
-    while frontier:
-        node = frontier.popleft()
-        node_action = actions.popleft()
-        if isEndState(node[-1][1]):
-            temp += node_action[1:]
-            break
-        if node[-1] not in exploredSet:
-            exploredSet.add(node[-1])
-            for action in legalActions(node[-1][0], node[-1][1]):
-                newPosPlayer, newPosBox = updateState(node[-1][0], node[-1][1], action)
-                if isFailed(newPosBox):
+    while frontier: 
+        node = frontier.popleft() # Lấy nút được chọn để tiếp tục tìm kiếm (
+        node_action = actions.popleft() # Lấy chuỗi hành động tương ứng
+        if isEndState(node[-1][1]):  # Nếu nó là trạng thái kết thúc 
+            temp += node_action[1:] # Ghi nhận lời giải, lưu ý cần bỏ bước khởi đầu
+            break # Thoát khỏi vòng lặp
+        if node[-1] not in exploredSet: # Nếu chưa khám phá nút này
+            exploredSet.add(node[-1]) # Đánh dấu nút này là đã được khám phá
+            for action in legalActions(node[-1][0], node[-1][1]): # Gọi successor funcion, duyệt qua các hành động hợp lệ từ trạng thái hiện tại
+                newPosPlayer, newPosBox = updateState(node[-1][0], node[-1][1], action) # Trạng thái mới sau khi thực hiện hành động
+                if isFailed(newPosBox): # Nếu trạng thái này dẫn đến thất bại, bỏ qua nó
                     continue
-                frontier.append(node + [(newPosPlayer, newPosBox)])
-                actions.append(node_action + [action[-1]])
-    return temp
+                frontier.append(node + [(newPosPlayer, newPosBox)]) # Thêm trạng thái mới vào frontier
+                actions.append(node_action + [action[-1]]) # Thêm chuỗi hành động mới vào actions
+    return temp # Trả về lời giải
     
 
 def cost(actions):
@@ -204,36 +204,37 @@ def cost(actions):
 
 def uniformCostSearch(gameState):
     """Implement uniformCostSearch approach"""
-    beginBox = PosOfBoxes(gameState)
-    beginPlayer = PosOfPlayer(gameState)
+    beginBox = PosOfBoxes(gameState) # Trạng thái của các hộp ban đầu
+    beginPlayer = PosOfPlayer(gameState) # Vị trí ban đầu của người chơi
 
-    startState = (beginPlayer, beginBox)
-    frontier = PriorityQueue()
-    frontier.push([startState], 0)
-    exploredSet = set()
-    actions = PriorityQueue()
-    actions.push([0], 0)
-    temp = []
+    startState = (beginPlayer, beginBox) # Trạng thái đầu tiên của trò chơi
+    frontier = PriorityQueue() # Dùng priorityqueue để lưu tập các trạng thái cần mở rộng
+    frontier.push([startState], 0) # Thêm trạng thái ban đầu frontier
+    exploredSet = set() # Tập các nút (trạng thái) đã thăm để tránh lặp lại
+    actions = PriorityQueue() # Lưu lại truy vết đối với nút(trạng thái) tương ứng 
+    actions.push([0], 0) # Thêm trạng thái ban đầu vào actions
+    temp = [] # Chứa danh sách các hành động tạo thành lời giải
+
     ### CODING FROM HERE ###
-    while frontier.isEmpty:
-        node = frontier.pop()
-        node_action = actions.pop()
+    while frontier.isEmpty() == False: # Lặp cho đến khi hết trạng thái cần mở rộng
+        node = frontier.pop() # Lấy nút được chọn để tiếp tục tìm kiếm (có chi phí nhỏ nhất theo priority queue)
+        node_action = actions.pop() # Lấy chuỗi hành động tương ứng
 
-        if isEndState(node[-1][1]):
-            temp += node_action[1:]
-            break
+        if isEndState(node[-1][1]): # Nếu nó là trạng thái kết thúc 
+            temp += node_action[1:] # Ghi nhận lời giải, lưu ý cần bỏ bước khởi đầu
+            break # Thoát khỏi vòng lặp
 
-        if node[-1] not in exploredSet:
-            exploredSet.add(node[-1])
-            for action in legalActions(node[-1][0], node[-1][1]):
-                newPosPlayer, newPosBox = updateState(node[-1][0], node[-1][1], action)
+        if node[-1] not in exploredSet: # Nếu chưa khám phá nút này
+            exploredSet.add(node[-1]) # Đánh dấu nút này là đã được khám phá
+            for action in legalActions(node[-1][0], node[-1][1]): # Gọi successor funcion, duyệt qua các hành động hợp lệ từ trạng thái hiện tại
+                newPosPlayer, newPosBox = updateState(node[-1][0], node[-1][1], action) # Trạng thái mới sau khi thực hiện hành động
 
-                if isFailed(newPosBox):
+                if isFailed(newPosBox): # Nếu trạng thái này dẫn đến thất bại, bỏ qua nó
                     continue
 
-                frontier.push(node + [(newPosPlayer, newPosBox)], cost(node_action[1:] + [action[-1]]))
-                actions.push(node_action + [action[-1]], cost(node_action[1:] + [action[-1]]))
-    return temp
+                frontier.push(node + [(newPosPlayer, newPosBox)], cost(node_action[1:] + [action[-1]])) # Thêm trạng thái mới vào frontier với chi phí tương ứng
+                actions.push(node_action + [action[-1]], cost(node_action[1:] + [action[-1]])) # Thêm chuỗi hành động mới vào actions với chi phí tương ứng 
+    return temp # Trả về lời giải
 
 
 """Read command"""
