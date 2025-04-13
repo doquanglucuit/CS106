@@ -186,23 +186,46 @@ def cost(actions):
     """A cost function"""
     return len([x for x in actions if x.islower()])
 
+def cost(actions):
+    """A cost function"""
+    return len([x for x in actions if x.islower()])
+
 def uniformCostSearch(gameState):
     """Implement uniformCostSearch approach"""
-    beginBox = PosOfBoxes(gameState)
-    beginPlayer = PosOfPlayer(gameState)
+    beginBox = PosOfBoxes(gameState) # Trạng thái của các hộp ban đầu
+    beginPlayer = PosOfPlayer(gameState) # Vị trí ban đầu của người chơi
 
-    startState = (beginPlayer, beginBox)
-    frontier = PriorityQueue()
-    frontier.push([startState], 0)
-    exploredSet = set()
-    actions = PriorityQueue()
-    actions.push([0], 0)
-    temp = []
+    startState = (beginPlayer, beginBox) # Trạng thái đầu tiên của trò chơi
+    frontier = PriorityQueue() # Dùng priorityqueue để lưu tập các trạng thái cần mở rộng
+    frontier.push([startState], 0) # Thêm trạng thái ban đầu frontier
+    exploredSet = set() # Tập các nút (trạng thái) đã thăm để tránh lặp lại
+    actions = PriorityQueue() # Lưu lại truy vết đối với nút(trạng thái) tương ứng 
+    actions.push([0], 0) # Thêm trạng thái ban đầu vào actions
+    temp = [] # Chứa danh sách các hành động tạo thành lời giải
+
     ### CODING FROM HERE ###
+    while frontier.isEmpty() == False: # Lặp cho đến khi hết trạng thái cần mở rộng
+        node = frontier.pop() # Lấy nút được chọn để tiếp tục tìm kiếm (có chi phí nhỏ nhất theo priority queue)
+        node_action = actions.pop() # Lấy chuỗi hành động tương ứng
 
-def heuristic(posPlayer, posBox):
-    # print(posPlayer, posBox)
-    """A heuristic function to calculate the overall distance between the else boxes and the else goals"""
+        if isEndState(node[-1][1]): # Nếu nó là trạng thái kết thúc 
+            temp += node_action[1:] # Ghi nhận lời giải, lưu ý cần bỏ bước khởi đầu
+            break # Thoát khỏi vòng lặp
+
+        if node[-1] not in exploredSet: # Nếu chưa khám phá nút này
+            exploredSet.add(node[-1]) # Đánh dấu nút này là đã được khám phá
+            for action in legalActions(node[-1][0], node[-1][1]): # Gọi successor funcion, duyệt qua các hành động hợp lệ từ trạng thái hiện tại
+                newPosPlayer, newPosBox = updateState(node[-1][0], node[-1][1], action) # Trạng thái mới sau khi thực hiện hành động
+
+                if isFailed(newPosBox): # Nếu trạng thái này dẫn đến thất bại, bỏ qua nó
+                    continue
+
+                frontier.push(node + [(newPosPlayer, newPosBox)], cost(node_action[1:] + [action[-1]])) # Thêm trạng thái mới vào frontier với chi phí tương ứng
+                actions.push(node_action + [action[-1]], cost(node_action[1:] + [action[-1]])) # Thêm chuỗi hành động mới vào actions với chi phí tương ứng 
+    print("Number of nodes opened:", len(exploredSet))
+    return temp # Trả về lời giải
+
+def random_match_heuristic(posPlayer, posBox):
     distance = 0
     completes = set(posGoals) & set(posBox)
     sortposBox = list(set(posBox).difference(completes))
@@ -211,30 +234,55 @@ def heuristic(posPlayer, posBox):
         distance += (abs(sortposBox[i][0] - sortposGoals[i][0])) + (abs(sortposBox[i][1] - sortposGoals[i][1]))
     return distance
 
+
+def hungarian_heuristic(posPlayer, posBox):
+    from scipy.optimize import linear_sum_assignment
+    completes = set(posGoals) & set(posBox)
+    sortposBox = list(set(posBox) - completes)
+    sortposGoals = list(set(posGoals) - completes)
+    
+    if not sortposBox:
+        return 0
+    
+    cost_matrix = [[abs(bx - gx) + abs(by - gy) for gx, gy in sortposGoals] for bx, by in sortposBox]
+    row_ind, col_ind = linear_sum_assignment(cost_matrix)
+    
+    return sum(cost_matrix[i][j] for i, j in zip(row_ind, col_ind))
+
 def aStarSearch(gameState):
     """Implement aStarSearch approach"""
     # start =  time.time()
-    beginBox = PosOfBoxes(gameState)
-    beginPlayer = PosOfPlayer(gameState)
-    temp = []
-    start_state = (beginPlayer, beginBox)
-    frontier = PriorityQueue()
-    frontier.push([start_state], heuristic(beginPlayer, beginBox))
-    exploredSet = set()
-    actions = PriorityQueue()
-    actions.push([0], heuristic(beginPlayer, start_state[1]))
-    while len(frontier.Heap) > 0:
-        node = frontier.pop()
-        node_action = actions.pop()
-        if isEndState(node[-1][-1]):
-            temp += node_action[1:]
-            break
+    beginBox = PosOfBoxes(gameState) # Trạng thái của các hộp ban đầu
+    beginPlayer = PosOfPlayer(gameState) # Vị trí ban đầu của người chơi
+    temp = [] # Chứa danh sách các hành động tạo thành lời giải
+    start_state = (beginPlayer, beginBox) # Trạng thái đầu tiên của trò chơi
+    frontier = PriorityQueue() # Dùng priorityqueue để lưu tập các trạng thái cần mở rộng
+    frontier.push([start_state], random_match_heuristic(beginPlayer, beginBox))# Thêm trạng thái ban đầu frontier
+    exploredSet = set()# Tập các nút (trạng thái) đã thăm để tránh lặp lại
+    actions = PriorityQueue()# Lưu lại truy vết đối với nút(trạng thái) tương ứng 
+    actions.push([0], random_match_heuristic(beginPlayer, start_state[1])) # Thêm trạng thái ban đầu vào actions
+    while len(frontier.Heap) > 0: # Lặp cho đến khi hết trạng thái cần mở rộng
+        node = frontier.pop() # Lấy nút được chọn để tiếp tục tìm kiếm (có chi phí nhỏ nhất theo priority queue)
+        node_action = actions.pop() # Lấy chuỗi hành động tương ứng
+
+        if isEndState(node[-1][1]):# Nếu nó là trạng thái kết thúc 
+            temp += node_action[1:] # Ghi nhận lời giải, lưu ý cần bỏ bước khởi đầu
+            break# Thoát khỏi vòng lặp
 
         ### CONTINUE YOUR CODE FROM HERE
-
-    # end =  time.time()
-
-    return temp
+        if node[-1] not in exploredSet: # Nếu chưa khám phá nút này
+            exploredSet.add(node[-1]) # Đánh dấu nút này là đã được khám phá
+            for action in legalActions(node[-1][0], node[-1][1]): # Gọi successor funcion, duyệt qua các hành động hợp lệ từ trạng thái hiện tại
+                newPosPlayer, newPosBox = updateState(node[-1][0], node[-1][1], action) # Trạng thái mới sau khi thực hiện hành động
+            
+                if isFailed(newPosBox): # Nếu trạng thái này dẫn đến thất bại, bỏ qua nó
+                    continue
+                
+                frontier.push(node + [(newPosPlayer, newPosBox)], cost(node_action[1:] + [action[-1]]) + random_match_heuristic(newPosPlayer, newPosBox))# Thêm trạng thái mới vào frontier với chi phí là hàm cost + hàm heuristic
+                actions.push(node_action + [action[-1]], cost(node_action[1:] + [action[-1]]) + random_match_heuristic(newPosPlayer, newPosBox))# Thêm chuỗi hành động mới vào actions với chi phí tương ứng 
+    print("Number of nodes opened:", len(exploredSet))
+    print("Length path:", len(temp))
+    return temp # Trả về lời giải
 
 """Read command"""
 def readCommand(argv):
@@ -272,6 +320,6 @@ def get_move(layout, player_pos, method):
     else:
         raise ValueError('Invalid method.')
     time_end=time.time()
-    print('Runtime of %s: %.2f second.' %(method, time_end-time_start))
+    print('Runtime of %s: %.5f second.' %(method, time_end-time_start))
     print(result)
     return result
