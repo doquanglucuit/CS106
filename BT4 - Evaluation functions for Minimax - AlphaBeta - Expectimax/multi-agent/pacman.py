@@ -721,13 +721,13 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
         print('Record:       ', ', '.join(
             [['Loss', 'Win'][int(w)] for w in wins]))
 
-        '''
-        use for record game
-        '''
-        with open ('result.csv', 'a') as f:
-            wl = ['Loss', 'Win'][int(wins[0])]
-            line = f',{scores[0]},{wl},{end_running - start_running}\n'
-            f.write(line)
+        # '''
+        # use for record game
+        # '''
+        # with open ('result.csv', 'a') as f:
+        #     wl = ['Loss', 'Win'][int(wins[0])]
+        #     line = f',{scores[0]},{wl},{end_running - start_running}\n'
+        #     f.write(line)
 
     return games
 
